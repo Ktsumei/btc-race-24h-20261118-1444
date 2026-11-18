@@ -1,11 +1,13 @@
 // Capitulation-bounce cbBTC bot for btc-race-24h-20261118-1444 (Node 22, stdlib only).
 //
-// Idea, tuned on the published 24h dev window (1,440 one-minute bars of cbBTC/USDC):
-// the window's only reliable edge is the sharp selloff and the slow recovery that
-// follows it. Every baseline loses on it (buy-and-hold -31.63, ema-cross -148.17,
-// rsi-bollinger -39.92 USDC); the baselines bleed on 1-minute noise because a full
-// round trip costs ~26 bps in fee, slippage and pool impact. This bot trades at most
-// a few times, only at a capitulation, and then lets the recovery run:
+// The published 24h dev window (1,440 one-minute bars of cbBTC/USDC) trends down
+// 2.8% overall, and every kit baseline loses on it: buy-and-hold -31.63,
+// ema-cross -148.17, rsi-bollinger -39.92 USDC. The 1-minute noise (about 6.7 bps
+// per minute) is smaller than a full round trip's cost (~26 bps in fee, slippage
+// and pool impact), so frequent trading only bleeds. The one reliable edge in the
+// window is the sharp selloff early on and the slow, hours-long recovery that
+// follows it. This bot therefore trades rarely, only at a capitulation, and then
+// lets the recovery run:
 //
 //   - Entry (flat only): the close is at least 130 bps below the close 30 minutes
 //     ago, or at least 180 bps below the close 60 minutes ago (the second leg
@@ -20,13 +22,13 @@
 //   - After an exit it waits 60 bars before it may enter again.
 //   - Full size (all cash, capped by the weight room), long only, one position.
 //
-// All decisions are exact BigInt comparisons on the raw price units, so two runs on
-// the same bars produce the same orders. No clock, no randomness, no network.
+// All decisions are exact BigInt comparisons on the raw price units, so two runs
+// on the same bars produce the same orders. No clock, no randomness, no network.
 import { BPS, runBars, type Bar, type BarsState, type BuyInput, type SellInput } from './vendor/makefun-bars.ts';
 
-/** Minutes of history the entry rule compares against (fast leg). */
+/** Bars of history the entry rule compares against (fast leg). */
 const LOOKBACK_BARS = 30;
-/** Minutes of history the entry rule compares against (slow leg). */
+/** Bars of history the entry rule compares against (slow leg). */
 const LOOKBACK_SLOW_BARS = 60;
 /** Entry: close this far (bps) below the close LOOKBACK_BARS ago. */
 const DIP_BPS = 130n;
